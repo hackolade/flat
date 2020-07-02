@@ -4,28 +4,33 @@ module.exports = flatten
 flatten.flatten = flatten
 flatten.unflatten = unflatten
 
+function keyIdentity (key) {
+  return key
+}
+
 function flatten (target, opts) {
   opts = opts || {}
 
-  var delimiter = opts.delimiter || '.'
-  var maxDepth = opts.maxDepth
-  var output = {}
+  const delimiter = opts.delimiter || '.'
+  const maxDepth = opts.maxDepth
+  const transformKey = opts.transformKey || keyIdentity
+  const output = {}
 
   function step (object, prev, currentDepth) {
     currentDepth = currentDepth || 1
     Object.keys(object).forEach(function (key) {
-      var value = object[key]
-      var isarray = opts.safe && Array.isArray(value)
-      var type = Object.prototype.toString.call(value)
-      var isbuffer = isBuffer(value)
-      var isobject = (
+      const value = object[key]
+      const isarray = opts.safe && Array.isArray(value)
+      const type = Object.prototype.toString.call(value)
+      const isbuffer = isBuffer(value)
+      const isobject = (
         type === '[object Object]' ||
         type === '[object Array]'
       )
 
-      var newKey = prev
-        ? prev + delimiter + key
-        : key
+      const newKey = prev
+        ? prev + delimiter + transformKey(key)
+        : transformKey(key)
 
       if (!isarray && !isbuffer && isobject && Object.keys(value).length &&
         (!opts.maxDepth || currentDepth < maxDepth)) {
@@ -44,11 +49,12 @@ function flatten (target, opts) {
 function unflatten (target, opts) {
   opts = opts || {}
 
-  var delimiter = opts.delimiter || '.'
-  var overwrite = opts.overwrite || false
-  var result = {}
+  const delimiter = opts.delimiter || '.'
+  const overwrite = opts.overwrite || false
+  const transformKey = opts.transformKey || keyIdentity
+  const result = {}
 
-  var isbuffer = isBuffer(target)
+  const isbuffer = isBuffer(target)
   if (isbuffer || Object.prototype.toString.call(target) !== '[object Object]') {
     return target
   }
@@ -56,7 +62,7 @@ function unflatten (target, opts) {
   // safely ensure that the key is
   // an integer.
   function getkey (key) {
-    var parsedKey = Number(key)
+    const parsedKey = Number(key)
 
     return (
       isNaN(parsedKey) ||
@@ -75,9 +81,9 @@ function unflatten (target, opts) {
   }
 
   function isEmpty (val) {
-    var type = Object.prototype.toString.call(val)
-    var isArray = type === '[object Array]'
-    var isObject = type === '[object Object]'
+    const type = Object.prototype.toString.call(val)
+    const isArray = type === '[object Array]'
+    const isObject = type === '[object Object]'
 
     if (!val) {
       return true
@@ -89,8 +95,9 @@ function unflatten (target, opts) {
   }
 
   target = Object.keys(target).reduce((result, key) => {
-    var type = Object.prototype.toString.call(target[key])
-    var isObject = (type === '[object Object]' || type === '[object Array]')
+    const type = Object.prototype.toString.call(target[key])
+    const isObject = (type === '[object Object]' || type === '[object Array]')
+   
     if (!isObject || isEmpty(target[key])) {
       result[key] = target[key]
       return result
@@ -104,14 +111,14 @@ function unflatten (target, opts) {
   }, {})
 
   Object.keys(target).forEach(function (key) {
-    var split = key.split(delimiter)
-    var key1 = getkey(split.shift())
-    var key2 = getkey(split[0])
-    var recipient = result
+    const split = key.split(delimiter).map(transformKey)
+    let key1 = getkey(split.shift())
+    let key2 = getkey(split[0])
+    let recipient = result
 
     while (key2 !== undefined) {
-      var type = Object.prototype.toString.call(recipient[key1])
-      var isobject = (
+      const type = Object.prototype.toString.call(recipient[key1])
+      const isobject = (
         type === '[object Object]' ||
         type === '[object Array]'
       )
