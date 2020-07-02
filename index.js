@@ -89,7 +89,7 @@ function unflatten (target, opts) {
   function parseIndex (key, regex, wrapper = '[') {
     const matchWrapper = key.match(regex)
     const wrappedIndex = matchWrapper && matchWrapper[0]
-    
+
     if (wrappedIndex) {
       return wrappedIndex.slice(wrapper.length, -(wrapper.length))
     }
@@ -109,7 +109,7 @@ function unflatten (target, opts) {
       const regex = new RegExp(`${customWrapper}.*?${customWrapper}`)
       return parseIndex(key, regex, customWrapper)
     }
-    
+
     const regex = /^\[0\]|\[[1-9][0-9]*\]$/
     return parseIndex(key, regex)
   }

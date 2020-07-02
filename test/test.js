@@ -206,6 +206,162 @@ suite('Flatten', function () {
       'hello.0500': 'darkness my old friend'
     })
   })
+
+  suite('.arrayAndObject', function () {
+    test('Should create object instead of array when true', function () {
+      const flattened = flatten({
+        hello: {
+          you: {
+            0: 'ipsum',
+            1: 'lorem'
+          },
+          other: { world: 'foo' }
+        }
+      }, {
+        arrayAndObject: true
+      })
+      assert.deepStrictEqual(flattened, {
+        'hello.you.0': 'ipsum',
+        'hello.you.1': 'lorem',
+        'hello.other.world': 'foo'
+      })
+    })
+
+    test('Should create array instead of object when true', function () {
+      const flattened = flatten({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, {
+        arrayAndObject: true
+      })
+      assert.deepStrictEqual(flattened, {
+        'hello.you.[0]': 'ipsum',
+        'hello.you.[1]': 'lorem',
+        'hello.other.world': 'foo'
+      })
+    })
+
+    test('Should create array (if index) and  object (if key) when true', function () {
+      const flattened = flatten({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' },
+          numeric: {
+            0: 'value',
+            5: 'another value'
+          }
+        }
+      }, {
+        arrayAndObject: true
+      })
+      assert.deepStrictEqual(flattened, {
+        'hello.you.[0]': 'ipsum',
+        'hello.you.[1]': 'lorem',
+        'hello.other.world': 'foo',
+        'hello.numeric.0': 'value',
+        'hello.numeric.5': 'another value'
+      })
+    })
+
+    test('Should not transformKey when true', function () {
+      const flattened = flatten({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' },
+          numeric: {
+            0: 'value',
+            5: 'another value'
+          }
+        }
+      }, {
+        arrayAndObject: true,
+        transformKey: function (key) {
+          return '__' + key + '__'
+        }
+      })
+      assert.deepStrictEqual(flattened, {
+        'hello.you.[0]': 'ipsum',
+        'hello.you.[1]': 'lorem',
+        'hello.other.world': 'foo',
+        'hello.numeric.0': 'value',
+        'hello.numeric.5': 'another value'
+      })
+    })
+
+    test('Should not create object instead of array when false', function () {
+      const flattened = flatten({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, {
+        arrayAndObject: false
+      })
+      assert.deepStrictEqual(flattened, {
+        'hello.you.0': 'ipsum',
+        'hello.you.1': 'lorem',
+        'hello.other.world': 'foo'
+      })
+    })
+  })
+
+  suite('.customWrapper', function () {
+    test('Should wrap array item index by wrapper "_array_item_index"', function () {
+      const flattened = flatten({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, {
+        arrayAndObject: true,
+        customWrapper: "_array_item_index"
+      })
+
+      assert.deepStrictEqual(flattened, {
+        'hello.you._array_item_index0_array_item_index': 'ipsum',
+        'hello.you._array_item_index1_array_item_index': 'lorem',
+        'hello.other.world': 'foo'
+      })
+    })
+
+    test('Should not wrap array item index by wrapper "_array_item_index" if arrayAndObject equal to false', function () {
+      const flattened = flatten({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, {
+        arrayAndObject: false,
+        customWrapper: "_array_item_index"
+      })
+
+      assert.deepStrictEqual(flattened, {
+        'hello.you.0': 'ipsum',
+        'hello.you.1': 'lorem',
+        'hello.other.world': 'foo'
+      })
+    })
+  })
 })
 
 suite('Unflatten', function () {
@@ -504,6 +660,166 @@ suite('Unflatten', function () {
     })
   })
 
+  suite('.arrayAndObject', function () {
+    test('Should create object instead of array when true', function () {
+      const unflattened = unflatten({
+        'hello.you.0': 'ipsum',
+        'hello.you.1': 'lorem',
+        'hello.other.world': 'foo'
+      }, {
+        arrayAndObject: true
+      })
+      assert.deepStrictEqual({
+        hello: {
+          you: {
+            0: 'ipsum',
+            1: 'lorem'
+          },
+          other: { world: 'foo' }
+        }
+      }, unflattened)
+      assert(!Array.isArray(unflattened.hello.you))
+    })
+
+    test('Should create array instead of object when true', function () {
+      const unflattened = unflatten({
+        'hello.you.[0]': 'ipsum',
+        'hello.you.[1]': 'lorem',
+        'hello.other.world': 'foo'
+      }, {
+        arrayAndObject: true
+      })
+      assert.deepStrictEqual({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, unflattened)
+      assert(Array.isArray(unflattened.hello.you))
+    })
+
+    test('Should create array (if index) and  object (if key) when true', function () {
+      const unflattened = unflatten({
+        'hello.you.[0]': 'ipsum',
+        'hello.you.[1]': 'lorem',
+        'hello.other.world': 'foo',
+        'hello.numeric.0': 'value',
+        'hello.numeric.5': 'another value'
+      }, {
+        arrayAndObject: true
+      })
+      assert.deepStrictEqual({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' },
+          numeric: {
+            0: 'value',
+            5: 'another value'
+          }
+        }
+      }, unflattened)
+      assert(Array.isArray(unflattened.hello.you))
+      assert(!Array.isArray(unflattened.hello.numeric))
+    })
+
+    test('Should not transformKey when true', function () {
+      const unflattened = unflatten({
+        'hello.you.[0]': 'ipsum',
+        'hello.you.[1]': 'lorem',
+        'hello.other.world': 'foo',
+        'hello.numeric.0': 'value',
+        'hello.numeric.5': 'another value'
+      }, {
+        arrayAndObject: true,
+        transformKey: function (key) {
+          return '__' + key + '__'
+        }
+      })
+      assert.deepStrictEqual({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' },
+          numeric: {
+            0: 'value',
+            5: 'another value'
+          }
+        }
+      }, unflattened)
+    })
+
+    test('Should not create object instead of array when false', function () {
+      const unflattened = unflatten({
+        'hello.you.0': 'ipsum',
+        'hello.you.1': 'lorem',
+        'hello.other.world': 'foo'
+      }, {
+        arrayAndObject: false
+      })
+      assert.deepStrictEqual({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, unflattened)
+      assert(Array.isArray(unflattened.hello.you))
+    })
+  })
+
+  suite('.customWrapper', function () {
+    test('Should unwrap array item index by wrapper "_array_item_index"', function () {
+      const unflattened = unflatten({
+        'hello.you._array_item_index0_array_item_index': 'ipsum',
+        'hello.you._array_item_index1_array_item_index': 'lorem',
+        'hello.other.world': 'foo'
+      }, {
+        arrayAndObject: true,
+        customWrapper: "_array_item_index"
+      })
+
+      assert.deepStrictEqual({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, unflattened)
+    })
+
+    test('Should not unwrap array item index by wrapper "_array_item_index" if arrayAndObject equal to false', function () {
+      const unflattened = unflatten({
+        'hello.you.0': 'ipsum',
+        'hello.you.1': 'lorem',
+        'hello.other.world': 'foo'
+      }, {
+        arrayAndObject: false,
+        customWrapper: "_array_item_index"
+      })
+
+      assert.deepStrictEqual({
+        hello: {
+          you: [
+            'ipsum',
+            'lorem'
+          ],
+          other: { world: 'foo' }
+        }
+      }, unflattened)
+    })
+  })
   if (typeof Buffer !== 'undefined') {
     test('Buffer', function () {
       assert.deepStrictEqual(unflatten({
@@ -593,6 +909,118 @@ suite('Order of Keys', function () {
     assert.deepStrictEqual(Object.keys(obj), Object.keys(result))
     assert.deepStrictEqual(Object.keys(obj.abc), Object.keys(result.abc))
     assert.deepStrictEqual(Object.keys(obj.abc.c[0]), Object.keys(result.abc.c[0]))
+  })
+})
+
+suite('Array item index and numeric key in Objects', function () {
+  test('Array items should not be converted to object keys after round trip flatten/unflatten', function () {
+    const obj = {
+      b: [1, 2, 3],
+      abc: {
+        c: [{
+          d: 1,
+          bca: 1,
+          a: 1
+        }]
+      },
+      a: 1,
+      d: [{
+        d: 1
+      }]
+    }
+    const result = unflatten(
+      flatten(obj)
+    )
+
+    assert.deepStrictEqual(Object.keys(obj), Object.keys(result))
+    assert.deepStrictEqual(Object.keys(obj.abc), Object.keys(result.abc))
+    assert.deepStrictEqual(Object.keys(obj.abc.c[0]), Object.keys(result.abc.c[0]))
+  })
+})
+
+suite('Array items and numeric object keys', function () {
+  test('Object keys and array items should equal after round trip flatten/unflatten', function () {
+    const obj = {
+      hello: {
+        you: [
+          'ipsum',
+          'lorem'
+        ],
+        other: { world: 'foo' },
+        numeric: {
+          0: 'value',
+          5: 'another value'
+        }
+      }
+    }
+    const result = unflatten(
+      flatten(obj, {
+        arrayAndObject: true
+      }), {
+        arrayAndObject: true
+      }
+    )
+
+    assert.deepStrictEqual(Object.keys(obj), Object.keys(result))
+    assert.deepStrictEqual(Object.keys(obj.hello), Object.keys(result.hello))
+    assert.deepStrictEqual(Object.keys(obj.hello.you), Object.keys(result.hello.you))
+    assert.deepStrictEqual(Object.keys(obj.hello.numeric), Object.keys(result.hello.numeric))
+  })
+
+  test('Object keys and array items should not equal after round trip flatten/unflatten', function () {
+    const obj = {
+      hello: {
+        you: [
+          'ipsum',
+          'lorem'
+        ],
+        other: { world: 'foo' },
+        numeric: {
+          0: 'value',
+          5: 'another value'
+        }
+      }
+    }
+    const result = unflatten(
+      flatten(obj, {
+        arrayAndObject: false
+      }), {
+        arrayAndObject: true
+      }
+    )
+
+    assert.notEqual(Object.keys(obj.hello.you), Object.keys(result.hello.you))
+    assert.deepStrictEqual(Object.keys(obj.hello.numeric), Object.keys(result.hello.numeric))
+  })
+
+  test('Object keys and array items should equal after round trip flatten/unflatten', function () {
+    const obj = {
+      hello: {
+        you: [
+          'ipsum',
+          'lorem'
+        ],
+        other: { world: 'foo' },
+        numeric: {
+          0: 'value',
+          5: 'another value'
+        }
+      }
+    }
+    const result = unflatten(
+      flatten(obj, {
+        arrayAndObject: true,
+        customWrapper: "_array_item_index"
+      }), {
+        arrayAndObject: true,
+        customWrapper: "_array_item_index"
+      }
+    )
+
+    assert.deepStrictEqual(Object.keys(obj), Object.keys(result))
+    assert.deepStrictEqual(Object.keys(obj.hello), Object.keys(result.hello))
+    assert.deepStrictEqual(Object.keys(obj.hello.you), Object.keys(result.hello.you))
+    assert.deepStrictEqual(Object.keys(obj.hello.numeric), Object.keys(result.hello.numeric))
   })
 })
 
